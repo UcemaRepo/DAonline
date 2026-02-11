@@ -14,6 +14,9 @@
 </head>
 
 <body>
+<div class="progress-wrapper">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
 
 <header class="header">
   <div class="header-inner">
@@ -44,35 +47,43 @@
   <option value="juridica">Persona Jurídica</option>
 </select>
 
-<label>Nombre Persona Física</label>
-<input type="text" id="pers_fis_nombre" disabled>
+<div id="fisica_section" class="fade-section">
+  <label>Nombre Persona Física</label>
+  <input type="text" id="pers_fis_nombre">
+</div>
 
-<label>Nombre Persona Jurídica</label>
-<input type="text" id="pers_ju_nombre" disabled>
+<div id="juridica_section" class="fade-section">
+  <label>Nombre Persona Jurídica</label>
+  <input type="text" id="pers_ju_nombre">
 
-<label>CUIT</label>
-<input type="text" id="cuit" disabled>
+  <label>CUIT</label>
+  <input type="text" id="cuit">
+</div>
+
 
 <hr>
 
 <h3>Tarjeta</h3>
 
-<select id="tipo_tarjeta">
+<select id="tipo_tarjeta" onchange="actualizarTarjeta()">
   <option value="">Seleccione tarjeta...</option>
   <option value="Visa">Visa</option>
   <option value="Master">Mastercard</option>
   <option value="American">American Express</option>
 </select>
 
-<label>Número de Tarjeta</label>
-<input type="text" id="numero_tarjeta">
+<div id="tarjeta_section" class="fade-section">
+  <label>Número de Tarjeta</label>
+  <input type="text" id="numero_tarjeta">
+</div>
+
 
 <hr>
 
 <h3>Datos del Alumno</h3>
 
-<h3>Firma Alumno</h3>
-<canvas id="firma_alumno" width="300" height="150"></canvas>
+<label>Firma Alumno</label>
+<canvas id="firma_alumno"></canvas>
 <br>
 <button type="button" onclick="signatureAlumno.clear()">Borrar firma alumno</button>
 
@@ -88,8 +99,8 @@
 
 <h3>Datos del Titular</h3>
 
-<h3>Firma Titular</h3>
-<canvas id="firma_titular" width="300" height="150"></canvas>
+<label>Firma Titular</label>
+<canvas id="firma_titular"></canvas>
 <br>
 <button type="button" onclick="signatureTitular.clear()">Borrar firma titular</button>
 
@@ -107,36 +118,198 @@
 <script>
 const { PDFDocument } = PDFLib;
 
+function resizeCanvas(canvas, signaturePad) {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext("2d").scale(ratio, ratio);
+
+  signaturePad.clear(); // importante
+}
+
+
 // ====== FIRMAS ======
 const canvasAlumno = document.getElementById("firma_alumno");
 const canvasTitular = document.getElementById("firma_titular");
 
-const signatureAlumno = new SignaturePad(canvasAlumno);
-const signatureTitular = new SignaturePad(canvasTitular);
+const signatureAlumno = new SignaturePad(canvasAlumno, {
+  minWidth: 0.8,
+  maxWidth: 2,
+  penColor: "#000000"
+});
+
+const signatureTitular = new SignaturePad(canvasTitular, {
+  minWidth: 0.8,
+  maxWidth: 2,
+  penColor: "#000000"
+});
+window.addEventListener("load", function() {
+  resizeCanvas(canvasAlumno, signatureAlumno);
+  resizeCanvas(canvasTitular, signatureTitular);
+});
+
+window.addEventListener("resize", function() {
+  resizeCanvas(canvasAlumno, signatureAlumno);
+  resizeCanvas(canvasTitular, signatureTitular);
+});
+
 
 // ====== HABILITAR CAMPOS SEGÚN PERSONA ======
+
 function actualizarPersona() {
   const tipo = document.getElementById("tipo_persona").value;
 
-  document.getElementById("pers_fis_nombre").disabled = true;
-  document.getElementById("pers_ju_nombre").disabled = true;
-  document.getElementById("cuit").disabled = true;
+  const fisica = document.getElementById("fisica_section");
+  const juridica = document.getElementById("juridica_section");
+
+  fisica.classList.remove("active");
+  juridica.classList.remove("active");
 
   if (tipo === "fisica") {
-    document.getElementById("pers_fis_nombre").disabled = false;
+    fisica.classList.add("active");
   }
 
   if (tipo === "juridica") {
-    document.getElementById("pers_ju_nombre").disabled = false;
-    document.getElementById("cuit").disabled = false;
+    juridica.classList.add("active");
   }
+
+  actualizarProgreso();
 }
+
+
+  function actualizarTarjeta() {
+  const tipoTarjeta = document.getElementById("tipo_tarjeta").value;
+  const tarjetaSection = document.getElementById("tarjeta_section");
+
+  tarjetaSection.classList.remove("active");
+
+  if (tipoTarjeta !== "") {
+    tarjetaSection.classList.add("active");
+  }
+
+  actualizarProgreso();
+}
+
+
+const camposBase = [
+  "lugar",
+  "fecha",
+  "tipo_persona",
+  "tipo_tarjeta",
+  "numero_tarjeta",
+  "aclaracion_alum",
+  "documento_alum",
+  "aclaracion_tit",
+  "documento_tit"
+];
+
+function actualizarProgreso() {
+
+  let total = 0;
+  let completos = 0;
+
+  camposBase.forEach(id => {
+    const el = document.getElementById(id);
+
+    if (id === "numero_tarjeta") {
+      if (document.getElementById("tipo_tarjeta").value !== "") {
+        total++;
+        if (el.value.trim() !== "") completos++;
+      }
+    } else {
+      total++;
+      if (el.value.trim() !== "") completos++;
+    }
+  });
+
+  // Persona dinámica
+  const tipoPersona = document.getElementById("tipo_persona").value;
+
+  if (tipoPersona === "fisica") {
+    total++;
+    if (document.getElementById("pers_fis_nombre").value.trim() !== "") completos++;
+  }
+
+  if (tipoPersona === "juridica") {
+    total += 2;
+    if (document.getElementById("pers_ju_nombre").value.trim() !== "") completos++;
+    if (document.getElementById("cuit").value.trim() !== "") completos++;
+  }
+
+  // Firmas
+  total += 2;
+  if (!signatureAlumno.isEmpty()) completos++;
+  if (!signatureTitular.isEmpty()) completos++;
+
+  const porcentaje = Math.round((completos / total) * 100);
+  document.getElementById("progressBar").style.width = porcentaje + "%";
+}
+
+function validarFormulario() {
+
+  let valido = true;
+
+  document.querySelectorAll("input, select").forEach(el => {
+    el.classList.remove("input-error");
+  });
+
+  function marcarError(id) {
+    document.getElementById(id).classList.add("input-error");
+    document.getElementById(id).scrollIntoView({ behavior: "smooth", block: "center" });
+    valido = false;
+  }
+
+  camposBase.forEach(id => {
+    if (document.getElementById(id).value.trim() === "") {
+      marcarError(id);
+    }
+  });
+
+  const tipoPersona = document.getElementById("tipo_persona").value;
+
+  if (tipoPersona === "fisica") {
+    if (document.getElementById("pers_fis_nombre").value.trim() === "") {
+      marcarError("pers_fis_nombre");
+    }
+  }
+
+  if (tipoPersona === "juridica") {
+    if (document.getElementById("pers_ju_nombre").value.trim() === "") {
+      marcarError("pers_ju_nombre");
+    }
+    if (document.getElementById("cuit").value.trim() === "") {
+      marcarError("cuit");
+    }
+  }
+
+  if (signatureAlumno.isEmpty()) {
+    alert("Falta la firma del alumno.");
+    valido = false;
+  }
+
+  if (signatureTitular.isEmpty()) {
+    alert("Falta la firma del titular.");
+    valido = false;
+  }
+
+  if (!valido) {
+    alert("Por favor complete todos los campos obligatorios.");
+  }
+
+  return valido;
+}
+
 
 // ====== GENERAR PDF ======
 async function generarPDF() {
 
+  if (!validarFormulario()) return;
+
   const existingPdfBytes = await fetch('Débito Automático Grado Editable.pdf')
-    .then(r => r.arrayBuffer());
+  .then(res => res.arrayBuffer());
+
+
 
   const pdfDoc = await PDFDocument.load(existingPdfBytes);
   const form = pdfDoc.getForm();
@@ -156,6 +329,7 @@ async function generarPDF() {
 
     form.getTextField('Fecha').setText(fechaFormateada);
   }
+
 
   // ====== PERSONA ======
   const tipoPersona = document.getElementById("tipo_persona").value;
@@ -178,6 +352,8 @@ async function generarPDF() {
   }
 
   // ====== TARJETA ======
+
+
   const tipoTarjeta = document.getElementById('tipo_tarjeta').value;
   const numeroTarjeta = document.getElementById('numero_tarjeta').value;
 
@@ -245,6 +421,19 @@ if (!signatureTitular.isEmpty()) {
   link.download = 'Debito_Automatico_Completo.pdf';
   link.click();
 }
+
+document.querySelectorAll("input, select").forEach(el => {
+  el.addEventListener("input", actualizarProgreso);
+  el.addEventListener("change", actualizarProgreso);
+});
+
+canvasAlumno.addEventListener("mouseup", actualizarProgreso);
+canvasTitular.addEventListener("mouseup", actualizarProgreso);
+
+document.addEventListener("DOMContentLoaded", function () {
+  actualizarProgreso();
+});
+
 </script>
 <button onclick="generarPDF()">Generar PDF</button>
 

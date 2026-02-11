@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Formulario Débito Automático</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
+.container { background:#fff; max-width:700px; margin:auto; padding:20px; border-radius:8px; }
+label { display:block; margin-top:12px; font-weight:bold; }
+input, select { width:100%; padding:8px; margin-top:4px; }
+canvas { border:1px solid #ccc; margin-top:10px; }
+button { margin-top:15px; padding:10px 15px; font-size:16px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Adhesión Débito Automático</h2>
+
+<label>Lugar</label>
+<input type="text" id="lugar">
+
+<label>Fecha</label>
+<input type="date" id="fecha">
+
+<hr>
+
+<label>Tipo de Persona</label>
+<select id="tipo_persona" onchange="actualizarPersona()">
+  <option value="">Seleccione...</option>
+  <option value="fisica">Persona Física</option>
+  <option value="juridica">Persona Jurídica</option>
+</select>
+
+<label>Nombre Persona Física</label>
+<input type="text" id="pers_fis_nombre" disabled>
+
+<label>Nombre Persona Jurídica</label>
+<input type="text" id="pers_ju_nombre" disabled>
+
+<label>CUIT</label>
+<input type="text" id="cuit" disabled>
+
+<hr>
+
+<h3>Tarjeta</h3>
+
+<select id="tipo_tarjeta">
+  <option value="">Seleccione tarjeta...</option>
+  <option value="Visa">Visa</option>
+  <option value="Master">Mastercard</option>
+  <option value="American">American Express</option>
+</select>
+
+<label>Número de Tarjeta</label>
+<input type="text" id="numero_tarjeta">
+
+<hr>
+
+<h3>Datos del Alumno</h3>
+
+<label>Aclaración Alumno</label>
+<input type="text" id="aclaracion_alum">
+
+<label>Documento Alumno</label>
+<input type="text" id="documento_alum">
+
+<hr>
+
+<h3>Datos del Titular</h3>
+
+<label>Aclaración Titular</label>
+<input type="text" id="aclaracion_tit">
+
+<label>Documento Titular</label>
+<input type="text" id="documento_tit">
+
+<hr>
+
+<h3>Firma Alumno</h3>
+<canvas id="firma_alumno" width="300" height="150"></canvas>
+<br>
+<button type="button" onclick="signatureAlumno.clear()">Borrar firma alumno</button>
+
+<hr>
+
+<h3>Firma Titular</h3>
+<canvas id="firma_titular" width="300" height="150"></canvas>
+<br>
+<button type="button" onclick="signatureTitular.clear()">Borrar firma titular</button>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+<script>
+const { PDFDocument } = PDFLib;
+
+// ====== FIRMAS ======
+const canvasAlumno = document.getElementById("firma_alumno");
+const canvasTitular = document.getElementById("firma_titular");
+
+const signatureAlumno = new SignaturePad(canvasAlumno);
+const signatureTitular = new SignaturePad(canvasTitular);
+
+// ====== HABILITAR CAMPOS SEGÚN PERSONA ======
+function actualizarPersona() {
+  const tipo = document.getElementById("tipo_persona").value;
+
+  document.getElementById("pers_fis_nombre").disabled = true;
+  document.getElementById("pers_ju_nombre").disabled = true;
+  document.getElementById("cuit").disabled = true;
+
+  if (tipo === "fisica") {
+    document.getElementById("pers_fis_nombre").disabled = false;
+  }
+
+  if (tipo === "juridica") {
+    document.getElementById("pers_ju_nombre").disabled = false;
+    document.getElementById("cuit").disabled = false;
+  }
+}
+
+// ====== GENERAR PDF ======
+async function generarPDF() {
+
+  const existingPdfBytes = await fetch('Débito Automático Grado Editable.pdf')
+    .then(r => r.arrayBuffer());
+
+  const pdfDoc = await PDFDocument.load(existingPdfBytes);
+  const form = pdfDoc.getForm();
+
+  // Lugar
+  form.getTextField('Lugar')
+      .setText(document.getElementById('lugar').value);
+
+  // Fecha formateada
+  const fechaInput = document.getElementById('fecha').value;
+  if (fechaInput) {
+    const fechaObj = new Date(fechaInput);
+    const fechaFormateada =
+      ("0" + fechaObj.getDate()).slice(-2) + "/" +
+      ("0" + (fechaObj.getMonth() + 1)).slice(-2) + "/" +
+      fechaObj.getFullYear();
+
+    form.getTextField('Fecha').setText(fechaFormateada);
+  }
+
+  // ====== PERSONA ======
+  const tipoPersona = document.getElementById("tipo_persona").value;
+
+  if (tipoPersona === "fisica") {
+    form.getTextField('Pers_Fis')
+        .setText(document.getElementById('pers_fis_nombre').value);
+
+    form.getCheckBox('Check Box5').check();
+  }
+
+  if (tipoPersona === "juridica") {
+    form.getTextField('Pers_Ju')
+        .setText(document.getElementById('pers_ju_nombre').value);
+
+    form.getTextField('CUIT')
+        .setText(document.getElementById('cuit').value);
+
+    form.getCheckBox('Check Box6').check();
+  }
+
+  // ====== TARJETA ======
+  const tipoTarjeta = document.getElementById('tipo_tarjeta').value;
+  const numeroTarjeta = document.getElementById('numero_tarjeta').value;
+
+  if (tipoTarjeta === "Visa")
+    form.getTextField('Visa').setText(numeroTarjeta);
+
+  if (tipoTarjeta === "Master")
+    form.getTextField('Master').setText(numeroTarjeta);
+
+  if (tipoTarjeta === "American")
+    form.getTextField('American').setText(numeroTarjeta);
+
+  // ====== ALUMNO ======
+  form.getTextField('Aclaracion_Alum')
+      .setText(document.getElementById('aclaracion_alum').value);
+
+  form.getTextField('Documento_Alum')
+      .setText(document.getElementById('documento_alum').value);
+
+  // ====== TITULAR ======
+  form.getTextField('Aclaracion_Tit')
+      .setText(document.getElementById('aclaracion_tit').value);
+
+  form.getTextField('Documento_Tit')
+      .setText(document.getElementById('documento_tit').value);
+
+  const page = pdfDoc.getPages()[0];
+
+ // ====== FIRMA ALUMNO ======
+if (!signatureAlumno.isEmpty()) {
+
+  const firmaPNG = canvasAlumno.toDataURL('image/png');
+  const firmaBytes = await fetch(firmaPNG).then(res => res.arrayBuffer());
+  const firmaImage = await pdfDoc.embedPng(firmaBytes);
+
+  page.drawImage(firmaImage, {
+    x: 80,      // un poco más a la izquierda
+    y: 230,     // SUBIDA
+    width: 180,
+    height: 55,
+  });
+}
+
+// ====== FIRMA TITULAR ======
+if (!signatureTitular.isEmpty()) {
+
+  const firmaPNG2 = canvasTitular.toDataURL('image/png');
+  const firmaBytes2 = await fetch(firmaPNG2).then(res => res.arrayBuffer());
+  const firmaImage2 = await pdfDoc.embedPng(firmaBytes2);
+
+  page.drawImage(firmaImage2, {
+    x: 330,     // bloque derecho
+    y: 230,     // misma altura
+    width: 180,
+    height: 55,
+  });
+}
+
+
+  const pdfBytes = await pdfDoc.save();
+
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'Debito_Automatico_Completo.pdf';
+  link.click();
+}
+</script>
+<button onclick="generarPDF()">Generar PDF</button>
+
+
+</body>
+</html>

@@ -11,6 +11,7 @@
 
 body {
   margin: 0;
+  padding-top: 6px;
   font-family: 'Inter', sans-serif;
   background: var(--ucema-light);
   color: var(--ucema-dark);
@@ -163,3 +164,66 @@ button:active {
     max-width: 100%;
   }
 }
+
+/* PROGRESS BAR */
+.progress-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: #e5e5e5;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #8C1525; /* Rojo UCEMA */
+  transition: width 0.3s ease;
+}
+
+
+/* CAMPOS DESHABILITADOS */
+input:disabled {
+  background: #eeeeee;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* FADE SECTIONS */
+.fade-section {
+  opacity: 0;
+  transform: translateY(-5px);
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
+}
+
+.fade-section.active {
+  opacity: 1;
+  transform: translateY(0);
+  height: auto;
+  overflow: visible;
+}
+
+
+/* ERROR */
+.input-error {
+  border: 2px solid #cc0000 !important;
+  background: #fff5f5 !important;
+}
+
+canvas {
+  width: 100%;
+  max-width: 400px;
+  height: 160px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  touch-action: none;
+}
+

@@ -470,7 +470,7 @@ nombreAlumno = nombreAlumno
   .replace(/[^a-zA-Z0-9\s]/g, "") // elimina símbolos raros
   .replace(/\s+/g, "_"); // espacios → guión bajo
 
-link.download = `Debito_Automatico_${nombreAlumno}.pdf`;
+link.download = `DA - ${nombreAlumno}.pdf`;
 
   link.click();
 }

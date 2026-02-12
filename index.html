@@ -92,7 +92,7 @@
 <label>Aclaración Alumno</label>
 <input type="text" id="aclaracion_alum" maxlength="50">
 
-<label>N°Documento Alumno</label>
+<label>Documento Alumno</label>
 <input type="text" inputmode="numeric" id="documento_alum" maxlength="20"  pattern="\d{1,20}">
 
 <hr>
@@ -107,7 +107,7 @@
 <label>Aclaración Titular</label>
 <input type="text" id="aclaracion_tit" maxlength="50">
 
-<label>N°Documento Titular</label>
+<label>Documento Titular</label>
 <input type="text" inputmode="numeric" id="documento_tit" maxlength="20"  pattern="\d{1,20}">
 
 <hr>
@@ -121,12 +121,20 @@ const { PDFDocument } = PDFLib;
 function resizeCanvas(canvas, signaturePad) {
   const ratio = Math.max(window.devicePixelRatio || 1, 1);
 
+  // Guardamos la firma actual
+  const data = signaturePad.toData();
+
   canvas.width = canvas.offsetWidth * ratio;
   canvas.height = canvas.offsetHeight * ratio;
   canvas.getContext("2d").scale(ratio, ratio);
 
-  signaturePad.clear(); // importante
+  // Restauramos la firma si existía
+  signaturePad.clear();
+  if (data) {
+    signaturePad.fromData(data);
+  }
 }
+
 
 
 // ====== FIRMAS ======
@@ -149,10 +157,16 @@ window.addEventListener("load", function() {
   resizeCanvas(canvasTitular, signatureTitular);
 });
 
+let resizeTimeout;
+
 window.addEventListener("resize", function() {
-  resizeCanvas(canvasAlumno, signatureAlumno);
-  resizeCanvas(canvasTitular, signatureTitular);
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    resizeCanvas(canvasAlumno, signatureAlumno);
+    resizeCanvas(canvasTitular, signatureTitular);
+  }, 300);
 });
+
 
 function soloNumeros(input) {
   input.value = input.value.replace(/\D/g, '');

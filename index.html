@@ -32,8 +32,8 @@
 <div class="container">
 <h2>Adhesión Débito Automático</h2>
 
-<label>Ubicación donde se está firmando el documento (Ejemplo: Reconquista 775, CABA)</label>
-<input type="text" id="lugar">
+<label>Ubicación dónde se está firmando el documento (Ejemplo: Reconquista 775, CABA)</label>
+<input type="text" id="lugar" maxlength="50">
 
 <label>Fecha</label>
 <input type="date" id="fecha">
@@ -49,15 +49,15 @@
 
 <div id="fisica_section" class="fade-section">
   <label>Nombre Persona Física</label>
-  <input type="text" id="pers_fis_nombre">
+  <input type="text" id="pers_fis_nombre" maxlength="50">
 </div>
 
 <div id="juridica_section" class="fade-section">
   <label>Nombre Persona Jurídica</label>
-  <input type="text" id="pers_ju_nombre">
+  <input type="text" id="pers_ju_nombre" maxlength="50">
 
   <label>CUIT</label>
-  <input type="text" id="cuit">
+  <input type="text" inputmode="numeric" id="cuit" maxlength="11">
 </div>
 
 
@@ -74,7 +74,7 @@
 
 <div id="tarjeta_section" class="fade-section">
   <label>Número de Tarjeta</label>
-  <input type="text" id="numero_tarjeta">
+  <input type="text" inputmode="numeric" id="numero_tarjeta" maxlength="16" pattern="\d{16}">
 </div>
 
 
@@ -90,10 +90,10 @@
 <hr>
 
 <label>Aclaración Alumno</label>
-<input type="text" id="aclaracion_alum">
+<input type="text" id="aclaracion_alum" maxlength="50">
 
-<label>N° de Documento Alumno</label>
-<input type="text" id="documento_alum">
+<label>Documento Alumno</label>
+<input type="text" inputmode="numeric" id="documento_alum" maxlength="20"  pattern="\d{1,20}">
 
 <hr>
 
@@ -105,10 +105,10 @@
 <button type="button" onclick="signatureTitular.clear()">Borrar firma titular</button>
 
 <label>Aclaración Titular</label>
-<input type="text" id="aclaracion_tit">
+<input type="text" id="aclaracion_tit" maxlength="50">
 
-<label>N° de Documento Titular</label>
-<input type="text" id="documento_tit">
+<label>Documento Titular</label>
+<input type="text" inputmode="numeric" id="documento_tit" maxlength="20"  pattern="\d{1,20}">
 
 <hr>
 
@@ -154,6 +154,29 @@ window.addEventListener("resize", function() {
   resizeCanvas(canvasTitular, signatureTitular);
 });
 
+function soloNumeros(input) {
+  input.value = input.value.replace(/\D/g, '');
+}
+
+document.getElementById("numero_tarjeta")
+  .addEventListener("input", function() {
+    soloNumeros(this);
+  });
+
+document.getElementById("cuit")
+  .addEventListener("input", function() {
+    soloNumeros(this);
+  });
+
+document.getElementById("documento_alum")
+  .addEventListener("input", function() {
+    soloNumeros(this);
+  });
+
+document.getElementById("documento_tit")
+  .addEventListener("input", function() {
+    soloNumeros(this);
+  });
 
 // ====== HABILITAR CAMPOS SEGÚN PERSONA ======
 

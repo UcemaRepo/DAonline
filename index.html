@@ -441,7 +441,23 @@ if (!signatureTitular.isEmpty()) {
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'Debito_Automatico_Completo.pdf';
+  // Tomamos el nombre del alumno
+let nombreAlumno = document.getElementById("aclaracion_alum").value.trim();
+
+// Si está vacío, fallback
+if (!nombreAlumno) {
+  nombreAlumno = "Sin_Nombre";
+}
+
+// Limpiamos caracteres inválidos para nombre de archivo
+nombreAlumno = nombreAlumno
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+  .replace(/[^a-zA-Z0-9\s]/g, "") // elimina símbolos raros
+  .replace(/\s+/g, "_"); // espacios → guión bajo
+
+link.download = `Debito_Automatico_${nombreAlumno}.pdf`;
+
   link.click();
 }
 

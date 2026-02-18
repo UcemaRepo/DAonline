@@ -489,7 +489,12 @@ document.addEventListener("DOMContentLoaded", function () {
   actualizarProgreso();
 });
 
-  const formData = new FormData();
+  
+</script>
+<button onclick="generarPDF()">Generar PDF</button>
+
+  <script>
+      const formData = new FormData();
 formData.append("pdf", pdfBlob, nombreArchivo);
 
 fetch("https://sandboxpdf.onrender.com/api/upload", {
@@ -500,10 +505,7 @@ fetch("https://sandboxpdf.onrender.com/api/upload", {
 .then(data => console.log("Subido:", data))
 .catch(err => console.error("Error:", err));
 
-  
-</script>
-<button onclick="generarPDF()">Generar PDF</button>
-
+  </script>
 
 </body>
 </html>
